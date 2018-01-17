@@ -180,7 +180,7 @@ function Shippingprice()
     }
     
     //Step3 : Compute the amount that belongs to the insurance, to the assistance and to convargo.
-    deliveries[i].price = Deductible(deliveries[i]);
+    deliveries[i].price = deductibleReduc(deliveries[i]);
     var commission = deliveries[i].price*0.30;
     deliveries[i].commission.insurance= commission/2;
     deliveries[i].commission.treasury = Math.floor(deliveries[i].distance/500);
@@ -190,7 +190,7 @@ function Shippingprice()
 }
 
 
-function Deductible(delivery) 
+function deductibleReduc(delivery) 
 {
   if (delivery.options.deductibleReduction=== true) {
     return delivery.price + delivery.volume;
