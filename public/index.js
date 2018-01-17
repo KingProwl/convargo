@@ -144,6 +144,63 @@ const actors = [{
   }]
 }];
 
+function Shippingprice()
+{
+  for (var i = 0; i < deliveries.length; i++)
+  {
+    var pricePerKm = 0;
+    var pricePerVolume = 0;
+
+    for (var j = 0; j < truckers.length; j++)
+    {
+      if (truckers[j].id === deliveries[i].truckerId)
+      {
+        pricePerKm = truckers[i].pricePerKm;
+        pricePerVolume = truckers[i].pricePerVolume;
+        //deliveries[i].price =(pricePerKm*deliveries[i].distance)+(pricePerVolume*deliveries[i].volume);  Step1: generate the shipping price. 
+      }
+    }
+
+    // Step2: Adapt the shipping price computation
+    if (deliveries[i].volume <= 10 && deliveries[i].volume >5)
+    {
+      deliveries[i].price= (pricePerKm*deliveries[i].distance + pricePerVolume*deliveries[i].volume)*(1-(10/100));
+    }
+    else if (deliveries[i].volume > 10 && deliveries[i].volume < 25)
+    {
+      deliveries[i].price= (pricePerKm*deliveries[i].distance + pricePerVolume*deliveries[i].volume)*(1-(30/100));
+    }
+    else if (deliveries[i].volume > 25)
+    {
+      deliveries[i].price= (pricePerKm*deliveries[i].distance + pricePerVolume*deliveries[i].volume)*(1-(50/100));
+    }
+    else
+    {
+      deliveries[i].price= (pricePerKm*deliveries[i].distance) + (pricePerVolume*deliveries[i].volume);
+    }
+    
+    //Step3 : Compute the amount that belongs to the insurance, to the assistance and to convargo.
+    deliveries[i].price = Deductible(deliveries[i]);
+    var commission = deliveries[i].price*0.30;
+    deliveries[i].commission.insurance= commission/2;
+    deliveries[i].commission.treasury = Math.floor(deliveries[i].distance/500);
+    deliveries[i].commission.convargo = commission - (deliveries[i].commission.insurance + deliveries[i].commission.treasury);
+
+  }
+}
+
+
+function Deductible(delivery) 
+{
+  if (delivery.options.deductibleReduction=== true) {
+    return delivery.price + delivery.volume;
+  }
+  else {
+    return delivery.price;
+  }
+}
+
+Shippingprice();
 console.log(truckers);
 console.log(deliveries);
 console.log(actors);
