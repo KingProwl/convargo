@@ -5,18 +5,18 @@
 var truckers = [{
   'id': 'f944a3ff-591b-4d5b-9b67-c7e08cba9791',
   'name': 'les-routiers-bretons',
-  'pricePerKm': 0.05,
-  'pricePerVolume': 5
+  'pricePK': 0.05,
+  'pricePV': 5
 }, {
   'id': '165d65ec-5e3f-488e-b371-d56ee100aa58',
   'name': 'geodis',
-  'pricePerKm': 0.1,
-  'pricePerVolume': 8.5
+  'pricePK': 0.1,
+  'pricePV': 8.5
 }, {
   'id': '6e06c9c0-4ab0-4d66-8325-c5fa60187cf8',
   'name': 'xpo',
-  'pricePerKm': 0.10,
-  'pricePerVolume': 10
+  'pricePK': 0.10,
+  'pricePV': 10
 }];
 
 //list of current shippings
@@ -31,7 +31,7 @@ var deliveries = [{
   'distance': 100,
   'volume': 4,
   'options': {
-    'deductibleReduction': false
+    'reduc': false
   },
   'price': 0,
   'commission': {
@@ -46,7 +46,7 @@ var deliveries = [{
   'distance': 650,
   'volume': 12,
   'options': {
-    'deductibleReduction': true
+    'reduc': true
   },
   'price': 0,
   'commission': {
@@ -61,7 +61,7 @@ var deliveries = [{
   'distance': 1250,
   'volume': 30,
   'options': {
-    'deductibleReduction': true
+    'reduc': true
   },
   'price': 0,
   'commission': {
@@ -144,63 +144,73 @@ const actors = [{
   }]
 }];
 
-function Shippingprice()
+function Convargo()
 {
-  for (var i = 0; i < deliveries.length; i++)
+  for(var i=0; i<deliveries.length; i++)
   {
-    var pricePerKm = 0;
-    var pricePerVolume = 0;
-
-    for (var j = 0; j < truckers.length; j++)
+    var pricePK = 0;
+    var pricePV = 0;
+    for(var j = 0; j<truckers.length; j++)
     {
-      if (truckers[j].id === deliveries[i].truckerId)
-      {
-        pricePerKm = truckers[i].pricePerKm;
-        pricePerVolume = truckers[i].pricePerVolume;
-        //deliveries[i].price =(pricePerKm*deliveries[i].distance)+(pricePerVolume*deliveries[i].volume);  Step1: generate the shipping price. 
+      if(deliveries[i].truckerId === truckers[j].id) {
+        pricePK=truckers[j].pricePK;
+        pricePV=truckers[j].pricePV;
+        // Step 1:generate the shipping price. deliveries[i].price =(pricePK*deliveries[i].distance)+(pricePV*deliveries[i].volume);
       }
     }
 
     // Step2: Adapt the shipping price computation
-    if (deliveries[i].volume <= 10 && deliveries[i].volume >5)
-    {
-      deliveries[i].price= (pricePerKm*deliveries[i].distance + pricePerVolume*deliveries[i].volume)*(1-(10/100));
-    }
-    else if (deliveries[i].volume > 10 && deliveries[i].volume < 25)
-    {
-      deliveries[i].price= (pricePerKm*deliveries[i].distance + pricePerVolume*deliveries[i].volume)*(1-(30/100));
-    }
-    else if (deliveries[i].volume > 25)
-    {
-      deliveries[i].price= (pricePerKm*deliveries[i].distance + pricePerVolume*deliveries[i].volume)*(1-(50/100));
-    }
-    else
-    {
-      deliveries[i].price= (pricePerKm*deliveries[i].distance) + (pricePerVolume*deliveries[i].volume);
-    }
+    var dcr = 1;
     
+    if(deliveries[i].volume>=25)
+    {
+      dcr = (1-(50/100));
+    }
+    else if(deliveries[i].volume>=10)
+    {
+      dcr = (1-(30/100));
+    }
+    else if(deliveries[i].volume>=5)
+    {
+      dcr = (1-(10/100));
+    }
+
+    //Aditional charges : Step 4 - The famous deductible
+    var reduc = 0;
+    if(deliveries[i].options.reduc === true)
+    {
+      reduc = deliveries[i].volume;
+    }
+
+    //Shipping Price including deacreasing and reduction if there is one.
+    var shippingPrice = dcr*(deliveries[i].distance*pricePK + deliveries[i].volume*pricePV);
+    deliveries[i].price = shippingPrice + reduc;
+
     //Step3 : Compute the amount that belongs to the insurance, to the assistance and to convargo.
-    deliveries[i].price = deductibleReduc(deliveries[i]);
-    var commission = deliveries[i].price*0.30;
-    deliveries[i].commission.insurance= commission/2;
-    deliveries[i].commission.treasury = Math.floor(deliveries[i].distance/500);
-    deliveries[i].commission.convargo = commission - (deliveries[i].commission.insurance + deliveries[i].commission.treasury);
+    var commission = (shippingPrice)*0.3 + reduc;
+    deliveries[i].commission.treasury = 1 + Math.floor(deliveries[i].distance/500);
+    deliveries[i].commission.insurance = 0.5*(commission - reduc);
+    deliveries[i].commission.convargo = commission-(deliveries[i].commission.treasury + deliveries[i].commission.insurance);
 
+    //Step 5 - Pay the actors
+    for(var k = 0; k < actors.length ; k++)
+    {
+      if (actors[k].deliveryId === deliveries[i].id)
+      {
+        
+        actors[k].payment[0].amount = shippingPrice + reduc;        
+        actors[k].payment[1].amount = deliveries[i].price - commission;        
+        actors[k].payment[2].amount = deliveries[i].commission.insurance;        
+        actors[k].payment[3].amount = deliveries[i].commission.treasury;        
+        actors[k].payment[4].amount = deliveries[i].commission.convargo;
+      }
+    }
   }
 }
 
-
-function deductibleReduc(delivery) 
-{
-  if (delivery.options.deductibleReduction=== true) {
-    return delivery.price + delivery.volume;
-  }
-  else {
-    return delivery.price;
-  }
-}
-
-Shippingprice();
+//-----------------------------------------------------MAIN-------------------------------------------------------------------
+Convargo();
 console.log(truckers);
 console.log(deliveries);
 console.log(actors);
+alert("Faire F12, puis console  pour voir les resultats");
