@@ -153,8 +153,8 @@ function Convargo()
     for(var j = 0; j<truckers.length; j++)
     {
       if(deliveries[i].truckerId === truckers[j].id) {
-        pricePK=truckers[j].pricePK;
-        pricePV=truckers[j].pricePV;
+        pricePK=truckers[j].pricePerKm;
+        pricePV=truckers[j].pricePerVolume;
         // Step 1:generate the shipping price. deliveries[i].price =(pricePK*deliveries[i].distance)+(pricePV*deliveries[i].volume);
       }
     }
@@ -174,6 +174,8 @@ function Convargo()
     {
       dcr = (1-(10/100));
     }
+    //Compute the shippingPrice including the deacrease.
+    var shippingPrice = dcr*(deliveries[i].distance*pricePK + deliveries[i].volume*pricePV);
 
     //Aditional charges : Step 4 - The famous deductible
     var reduc = 0;
@@ -182,8 +184,7 @@ function Convargo()
       reduc = deliveries[i].volume;
     }
 
-    //Shipping Price including deacreasing and reduction if there is one.
-    var shippingPrice = dcr*(deliveries[i].distance*pricePK + deliveries[i].volume*pricePV);
+    //Recompute the shipping Price including deacreasing and reduction if there is one.
     deliveries[i].price = shippingPrice + reduc;
 
     //Step3 : Compute the amount that belongs to the insurance, to the assistance and to convargo.
