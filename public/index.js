@@ -5,18 +5,18 @@
 var truckers = [{
   'id': 'f944a3ff-591b-4d5b-9b67-c7e08cba9791',
   'name': 'les-routiers-bretons',
-  'pricePK': 0.05,
-  'pricePV': 5
+  'pricePerKm': 0.05,
+  'pricePerVolume': 5
 }, {
   'id': '165d65ec-5e3f-488e-b371-d56ee100aa58',
   'name': 'geodis',
-  'pricePK': 0.1,
-  'pricePV': 8.5
+  'pricePerKm': 0.1,
+  'pricePerVolume': 8.5
 }, {
   'id': '6e06c9c0-4ab0-4d66-8325-c5fa60187cf8',
   'name': 'xpo',
-  'pricePK': 0.10,
-  'pricePV': 10
+  'pricePerKm': 0.10,
+  'pricePerVolume': 10
 }];
 
 //list of current shippings
